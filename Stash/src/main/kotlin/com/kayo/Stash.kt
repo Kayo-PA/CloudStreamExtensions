@@ -197,7 +197,6 @@ class Stash : MainAPI() {
             this.actors = actors
             this.duration = ((sceneFull?.files?.firstOrNull()?.duration ?: 0.0) / 60).toInt()
             this.year = sceneFull?.date?.substring(0, 4)?.toInt()
-//            this.backgroundPosterUrl =  sceneFull?.paths?.screenshot+"&apikey="+apiKey
 
 
             if (preview != null) {
