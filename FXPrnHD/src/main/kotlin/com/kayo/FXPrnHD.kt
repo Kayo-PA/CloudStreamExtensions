@@ -1,0 +1,190 @@
+package com.kayo
+
+import com.lagradost.cloudstream3.*
+import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.loadExtractor
+import com.lagradost.cloudstream3.utils.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import org.jsoup.nodes.Element
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
+
+class Fxprnhd : MainAPI() {
+    override var mainUrl = "https://fxpornhd.com"
+    override var name = "Fxprnhd"
+    override val hasMainPage = true
+    override val hasDownloadSupport = true
+    override val vpnStatus = VPNStatus.MightBeNeeded
+    override val supportedTypes = setOf(TvType.NSFW)
+    private val actorImgUrl = "https://cdn.dt18.com/images/names/big/"
+
+    override val mainPage = mainPageOf(
+        "latest" to "Latest Video",
+        "$mainUrl/c/bangbros" to "Bang Bros",
+        "$mainUrl/c/brazzers" to "Brazzers",
+        "$mainUrl/c/realitykings" to "Reality Kings",
+        "$mainUrl/c/blacked" to "Blacked",
+        "$mainUrl/c/pervmom" to "Pervmom",
+
+        )
+
+    override suspend fun getMainPage(
+        page: Int,
+        request: MainPageRequest
+    ): HomePageResponse {
+        val targetUrl = if (request.data == "latest") {
+            "$mainUrl/page/$page/?s="
+        } else {
+            "${request.data}/page/$page"
+        }
+
+        val document = app.get(targetUrl).document
+        val home =
+            document.select("article")
+                .mapNotNull {
+                    it.toSearchResult()
+                }
+        return newHomePageResponse(
+            list = HomePageList(
+                name = request.name,
+                list = home,
+                isHorizontalImages = true
+            ),
+            hasNext = true
+        )
+    }
+
+    private fun Element.toSearchResult(): SearchResponse? {
+        val title = this.selectFirst("span.title")?.text() ?: return null
+        val trailer = "https:" + this.selectFirst("video.wpst-trailer source")?.attr("src")
+        val href = fixUrl(this.selectFirst("a")!!.attr("href")) + "," + trailer
+        var posterUrl = this.select("div.post-thumbnail").attr("data-thumbs")
+        if (posterUrl.isEmpty()) {
+            posterUrl = this.select("video.wpst-trailer").attr("poster")
+        }
+        return newMovieSearchResponse(title, href, TvType.Movie) {
+            this.posterUrl = posterUrl
+            this.quality = SearchQuality.HD
+        }
+
+    }
+
+    override suspend fun search(query: String, page: Int): SearchResponseList {
+        val searchParam =
+            if ("p=" in query) "$mainUrl/actor/${
+                query.replace(" ", "-").replace("p=", "")
+            }/page/$page/"
+            else if (query == "latest") "$mainUrl/page/$page/?s="
+            else "$mainUrl/page/$page/?s=$query"
+        val document = app.get(searchParam).document
+        val results =
+            document.select("div.videos-list > article").mapNotNull { it.toSearchResult() }
+        val lastPageUrl =
+            document.select("div.pagination ul li").last()?.selectFirst("a")?.attr("href")
+        val totalPages =
+            Regex("""page/(\d+)/""").find(lastPageUrl ?: "")?.groupValues?.get(1)?.toIntOrNull()
+                ?: 1
+        val hasNext = page < totalPages
+        return newSearchResponseList(list = results, hasNext = hasNext)
+    }
+
+    override suspend fun load(url: String): LoadResponse {
+        var newurl: String
+        var trailerUrl: String
+        if (url.contains(",")) {
+            newurl = url.substringBeforeLast(",")
+            trailerUrl = url.substringAfterLast(",")
+        } else {
+            newurl = url
+            trailerUrl = "https:null"
+        }
+        val document = app.get(newurl).document
+
+        val title = document.selectFirst("div.title-views > h1")?.text()?.trim().toString()
+        val poster =
+            fixUrlNull(document.selectFirst("meta[property=og:image]")?.attr("content").toString())
+        val tags = document.select("div.tags-list > i").map { it.text() }
+        val description = document.select("div#rmjs-1 p:nth-child(1) > br").text().trim()
+        val actorNames = document.select("div.tags-list a[href*=/actor/]")
+            .mapNotNull { it.attr("title").takeIf { name -> name.isNotBlank() } }
+        val actors = actorNames.map { name ->
+            ActorData(
+                Actor(
+                    name,
+                    "$actorImgUrl${name.replace(" ", "-").lowercase()}.jpg"
+                )
+            )
+        }
+
+
+        val duration = Duration.parse(
+            document.select("div.video-player meta[itemprop=duration]").attr("content")
+        )
+        val recommendations =
+            document.select("div.videos-list > article").mapNotNull {
+                it.toSearchResult()
+            }
+
+        return newMovieLoadResponse(title, newurl, TvType.NSFW, newurl) {
+            this.posterUrl = poster
+            this.plot = description
+            this.tags = tags
+            this.actors = actors
+            this.recommendations = recommendations
+            this.duration = duration.toInt(DurationUnit.MINUTES)
+            this.year = 2025
+            if (trailerUrl != "https:null") {
+                this.trailers =
+                    listOf(TrailerData(trailerUrl, "", true)) as MutableList<TrailerData>
+            }
+        }
+
+    }
+
+    override suspend fun loadLinks(
+        data: String,
+        isCasting: Boolean,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
+
+        val document = app.get(data).document
+        val iframeUrl =
+            document.select("iframe[src]").attr("src").takeIf { it.isNotBlank() }?.let(::fixUrl)
+                ?: ""
+        val trackingUrl =
+            document.select("a#tracking-url.button").attr("href").takeIf { it.isNotBlank() }
+                ?.let(::fixUrl) ?: ""
+
+        loadExtractor(
+            iframeUrl,
+            referer = mainUrl,
+            subtitleCallback = subtitleCallback,
+            callback = callback
+        )
+
+        loadExtractor(
+            trackingUrl,
+            referer = mainUrl,
+            subtitleCallback = subtitleCallback,
+            callback = callback
+        )
+
+        callback.invoke(
+            newExtractorLink(
+                name,
+                name,
+                iframeUrl,
+                type = ExtractorLinkType.VIDEO
+            ) {
+                this.referer = mainUrl
+            }
+        )
+
+        return true
+
+    }
+}
