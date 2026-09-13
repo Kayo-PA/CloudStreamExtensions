@@ -217,7 +217,7 @@ class Stash : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val id = data.substringAfterLast("/")
-        updateViewCount(id.toInt())
+        stashGraphQL(updateViewCount(id.toInt()))
         val bodyJson = findSceneById(id.toInt())
         val initResponse = stashGraphQL(bodyJson)
         val parsed = gson.fromJson(initResponse, FindSceneResponse::class.java)
