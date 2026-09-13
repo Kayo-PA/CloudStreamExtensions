@@ -3,6 +3,6 @@
 "description": "This Repo Contains extensions des",
 "manifestVersion": 1,
 "pluginLists": [
-"https://raw.githubusercontent.com/Kayo-PA/CloudStreamExtension/refs/heads/builds/plugins.json"
+"https://raw.githubusercontent.com/Kayo-PA/CloudStreamExtensions/refs/heads/builds/plugins.json"
 ]
 }
