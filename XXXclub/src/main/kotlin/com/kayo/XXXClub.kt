@@ -6,7 +6,6 @@ import com.kayo.helper.searchPageUrls
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
-import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
 
 class XXXClub : MainAPI() {
     override var mainUrl = "https://xxxclub.to"
