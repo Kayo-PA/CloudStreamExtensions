@@ -338,16 +338,28 @@ class XXXClub : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val magnetLink = data.trim().replace(mainUrl,"")
-
-        callback(
-            newExtractorLink(
-                source = this.name,
-                name = "Torrent Magnet",
-                url = magnetLink,
-                type = ExtractorLinkType.MAGNET
+        val magnetLink = data.trim().replace("$mainUrl/","")
+        if (magnetLink.contains("magnet",ignoreCase = true)){
+            callback(
+                newExtractorLink(
+                    source = this.name,
+                    name = "Torrent Magnet",
+                    url = magnetLink,
+                    type = ExtractorLinkType.MAGNET
+                )
             )
-        )
+            return true
+        }else{
+            callback(
+                newExtractorLink(
+                    source = this.name,
+                    name = "Image Link",
+                    url = magnetLink,
+                    type = ExtractorLinkType.VIDEO
+                )
+            )
+
+        }
 
         return true
     }
