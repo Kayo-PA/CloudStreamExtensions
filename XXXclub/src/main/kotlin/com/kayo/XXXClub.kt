@@ -358,9 +358,20 @@ class XXXClub : MainAPI() {
             callback(
                 newExtractorLink(
                     source = this.name,
-                    name = "Torrent Magnet",
+                    name = "Magnet",
                     url = magnetLink,
                     type = ExtractorLinkType.MAGNET
+                )
+            )
+            return true
+        }
+        else if (magnetLink.contains("torrent",ignoreCase = true)){
+            callback(
+                newExtractorLink(
+                    source = this.name,
+                    name = "Torrent",
+                    url = magnetLink,
+                    type = ExtractorLinkType.TORRENT
                 )
             )
             return true
