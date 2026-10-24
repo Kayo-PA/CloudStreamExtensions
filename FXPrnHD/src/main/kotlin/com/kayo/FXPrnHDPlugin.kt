@@ -6,7 +6,6 @@ import android.content.Context
 import com.kayo.extractor.Pornkx
 import com.kayo.extractor.WatchStreamUs
 import com.kayo.extractor.WatchStreamUs2
-import com.lagradost.cloudstream3.extractors.JWPlayer
 import com.lagradost.cloudstream3.extractors.StreamTape
 
 @CloudstreamPlugin

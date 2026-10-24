@@ -1,5 +1,8 @@
 package com.kayo
 
+import android.net.Uri
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
@@ -8,7 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import java.util.Base64
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 
@@ -144,6 +149,7 @@ class Fxprnhd : MainAPI() {
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun loadLinks(
         data: String,
         isCasting: Boolean,
@@ -159,11 +165,37 @@ class Fxprnhd : MainAPI() {
             document.select("a#tracking-url.button").attr("href").takeIf { it.isNotBlank() }
                 ?.let(::fixUrl) ?: ""
 
+
+        val q = Uri.parse(iframeUrl).getQueryParameter("q") ?: ""
+
+        val decoded = String(
+            Base64.getDecoder().decode(q),
+            Charsets.UTF_8
+        )
+
+        val tag = Uri.parse("https://example.com/?$decoded")
+            .getQueryParameter("tag") ?: ""
+
+        val videoUrl = Jsoup.parseBodyFragment(tag)
+            .selectFirst("source[src]")
+            ?.attr("src") ?: ""
+
         loadExtractor(
             iframeUrl,
             referer = mainUrl,
             subtitleCallback = subtitleCallback,
             callback = callback
+        )
+
+        callback.invoke(
+            newExtractorLink(
+                name,
+                name,
+                videoUrl,
+                type = ExtractorLinkType.VIDEO
+            ) {
+                this.referer = mainUrl
+            }
         )
 
         loadExtractor(
