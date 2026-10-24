@@ -7,6 +7,6 @@ import android.content.Context
 @CloudstreamPlugin
 class MissAVPlugin: Plugin() {
     override fun load(context: Context) {
-        registerMainAPI(MissAV())
+        registerMainAPI(XXXClub())
     }
 }
