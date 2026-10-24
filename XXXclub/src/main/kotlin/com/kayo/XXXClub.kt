@@ -11,7 +11,7 @@ class XXXClub : MainAPI() {
     override var mainUrl = "https://xxxclub.to"
     override var name = "XXXClub"
     override val hasMainPage = true
-    override var lang = "jp"
+    override var lang = "en"
     override val hasQuickSearch = false
     override val supportedTypes = setOf(TvType.NSFW)
 
