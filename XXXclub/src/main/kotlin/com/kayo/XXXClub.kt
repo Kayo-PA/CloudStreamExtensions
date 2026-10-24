@@ -268,6 +268,11 @@ class XXXClub : MainAPI() {
             ?.attr("href")
             ?.takeIf { it.startsWith("magnet:") }
 
+        val torrentUrl = document
+            .selectFirst("a[title='Click here to download torrent']")
+            ?.attr("href")
+            ?.let { fixUrl(it) }
+
         val screenshots = document.select(".description img[src]")
             .mapNotNull { img ->
                 val imageUrl = img.absUrl("src")
@@ -279,12 +284,22 @@ class XXXClub : MainAPI() {
             .distinct()
 
         val episodes = buildList {
-            if (magnetLink != null) {
+            if (torrentUrl !=null){
                 add(
-                    newEpisode(magnetLink) {
+                    newEpisode(torrentUrl) {
                         name = "Torrent"
                         season = 1
                         episode = 1
+                        posterUrl = poster
+                    }
+                )
+            }
+            if (magnetLink != null) {
+                add(
+                    newEpisode(magnetLink) {
+                        name = "Magnet"
+                        season = 1
+                        episode = 2
                         posterUrl = poster
                     }
                 )
@@ -297,9 +312,9 @@ class XXXClub : MainAPI() {
 
                 add(
                     newEpisode(fullImageUrl) {
-                        name = "Screenshot ${index + 1}"
+                        name = "Screenshot ${index + 2}"
                         season = 1
-                        episode = index + 2
+                        episode = index + 3
                         posterUrl = imageUrl
                     }
                 )
