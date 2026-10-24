@@ -4,6 +4,7 @@ import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
 import com.lagradost.cloudstream3.plugins.Plugin
 import android.content.Context
 import com.kayo.extractor.Pornkx
+import com.kayo.extractor.WatchStreamUs
 import com.lagradost.cloudstream3.extractors.JWPlayer
 import com.lagradost.cloudstream3.extractors.StreamTape
 
@@ -13,6 +14,7 @@ class FXPrnHDPlugin: Plugin() {
         registerMainAPI(Fxprnhd())
         registerExtractorAPI(StreamTape())
         registerExtractorAPI(Pornkx())
+        registerExtractorAPI(WatchStreamUs())
 
     }
 }

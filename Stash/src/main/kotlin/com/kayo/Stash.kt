@@ -1,5 +1,7 @@
 package com.kayo
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.MainAPI
@@ -209,6 +211,7 @@ class Stash : MainAPI() {
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun loadLinks(
         data: String,
         isCasting: Boolean,
