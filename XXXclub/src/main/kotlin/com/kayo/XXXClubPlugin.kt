@@ -5,7 +5,7 @@ import com.lagradost.cloudstream3.plugins.Plugin
 import android.content.Context
 
 @CloudstreamPlugin
-class MissAVPlugin: Plugin() {
+class XXXClubPlugin: Plugin() {
     override fun load(context: Context) {
         registerMainAPI(XXXClub())
     }

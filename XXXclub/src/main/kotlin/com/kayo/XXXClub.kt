@@ -278,12 +278,29 @@ class XXXClub : MainAPI() {
             }
             .distinct()
 
-        val episodes = screenshots.mapIndexed { index, imageUrl ->
-            newEpisode(magnetLink ?: imageUrl) {
-                name = "Screenshot ${index + 1}"
-                season = 1
-                episode = index + 1
-                posterUrl = imageUrl
+        val episodes = buildList {
+            if (magnetLink != null) {
+                add(
+                    newEpisode(magnetLink) {
+                        name = "Torrent"
+                        season = 1
+                        episode = 1
+                        posterUrl = poster
+                    }
+                )
+            }
+
+            screenshots.forEachIndexed { index, imageUrl ->
+                val fullImageUrl = imageUrl.replace("/1s/", "/1/")
+
+                add(
+                    newEpisode(fullImageUrl) {
+                        name = "Screenshot ${index + 1}"
+                        season = 1
+                        episode = index + 2
+                        posterUrl = imageUrl
+                    }
+                )
             }
         }
 
@@ -320,10 +337,6 @@ class XXXClub : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val magnetLink = data.trim()
-
-        if (!magnetLink.startsWith("magnet:?", ignoreCase = true)) {
-            return false
-        }
 
         callback(
             newExtractorLink(
