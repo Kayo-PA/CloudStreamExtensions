@@ -291,7 +291,9 @@ class XXXClub : MainAPI() {
             }
 
             screenshots.forEachIndexed { index, imageUrl ->
-                val fullImageUrl = imageUrl.replace("/1s/", "/1/")
+                val fullImageUrl = imageUrl
+                    .replace(Regex("""(\d+)s/""")) { "${it.groupValues[1]}/" }
+                    .replace(Regex("""(\d+)\.th""")) { it.groupValues[1] }
 
                 add(
                     newEpisode(fullImageUrl) {
@@ -336,7 +338,7 @@ class XXXClub : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val magnetLink = data.trim()
+        val magnetLink = data.trim().replace(mainUrl,"")
 
         callback(
             newExtractorLink(
