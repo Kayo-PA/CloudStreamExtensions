@@ -90,13 +90,15 @@ class XXXClub : MainAPI() {
             "Trending" -> {
                 title = selectFirst(".feature-title")?.text().orEmpty()
                 url = attr("href")
-                image = selectFirst("img.feature-img")?.attr("src")
+                image = selectFirst("img.feature-img")?.attr("src")?.replace(Regex("""(\d+)s/""")) { "${it.groupValues[1]}/" }
+                    ?.replace(Regex("""(\d+)\.th""")) { it.groupValues[1] }
             }
 
             "Top 10" -> {
                     title = selectFirst("h4.title")?.text().orEmpty()
                     url = attr("href")
-                    image = selectFirst("img.poster")?.attr("src")
+                    image = selectFirst("img.poster")?.attr("src")?.replace(Regex("""(\d+)s/""")) { "${it.groupValues[1]}/" }
+                        ?.replace(Regex("""(\d+)\.th""")) { it.groupValues[1] }
             }
 
             "Top 100" -> {
@@ -104,7 +106,8 @@ class XXXClub : MainAPI() {
 
                 title = link?.text().orEmpty()
                 url = link?.attr("href").orEmpty()
-                image = selectFirst("img.floaterimg")?.attr("src")
+                image = selectFirst("img.floaterimg")?.attr("src")?.replace(Regex("""(\d+)s/""")) { "${it.groupValues[1]}/" }
+                    ?.replace(Regex("""(\d+)\.th""")) { it.groupValues[1] }
             }
 
             "Catalog" -> {
@@ -112,7 +115,8 @@ class XXXClub : MainAPI() {
 
                 title = link?.text().orEmpty()
                 url = link?.attr("href").orEmpty()
-                image = link?.selectFirst("img.catalogimg")?.attr("src")
+                image = link?.selectFirst("img.catalogimg")?.attr("src")?.replace(Regex("""(\d+)s/""")) { "${it.groupValues[1]}/" }
+                    ?.replace(Regex("""(\d+)\.th""")) { it.groupValues[1] }
             }
 
             else -> {
@@ -120,7 +124,8 @@ class XXXClub : MainAPI() {
 
                 title = link?.text().orEmpty()
                 url = link?.attr("href").orEmpty()
-                image = selectFirst("img.floaterimg")?.attr("src")
+                image = selectFirst("img.floaterimg")?.attr("src")?.replace(Regex("""(\d+)s/""")) { "${it.groupValues[1]}/" }
+                    ?.replace(Regex("""(\d+)\.th""")) { it.groupValues[1] }
             }
         }
 

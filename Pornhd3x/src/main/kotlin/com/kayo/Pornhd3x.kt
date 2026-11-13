@@ -183,7 +183,7 @@ class Pornhd3x : MainAPI() {
             val regex = """(?<="file":")[^"]+""".toRegex()
             val matchResult = regex.find(responseData)
             val ur = matchResult?.value
-            return ur
+            return ur?.removePrefix("//")
         }
     }
 
