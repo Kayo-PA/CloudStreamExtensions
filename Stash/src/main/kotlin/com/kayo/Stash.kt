@@ -1,12 +1,12 @@
 package com.kayo
 
+import android.text.Html
 import com.google.gson.Gson
 import com.kayo.helper.FindPerformerResponse
 import com.kayo.helper.FindPerformersResponse
 import com.kayo.helper.FindSceneResponse
 import com.kayo.helper.FindScenesResponse
 import com.kayo.helper.PerformerDetails
-import com.kayo.helper.SceneFull
 import com.kayo.helper.SceneItem
 import com.kayo.helper.findPerformer
 import com.kayo.helper.findSceneById
@@ -128,11 +128,6 @@ class Stash : MainAPI() {
             quality = sceneQuality(bestFile?.height)
         }
     }
-
-    /**
-     * One shared mapper is used by both the Performers homepage and `p=...` search.
-     * Performer cards open the same route, which load() recognises as a performer page.
-     */
     private fun performerSearchItem(performer: PerformerDetails): SearchResponse? {
         val performerId = performer.id ?: return null
         val performerName = performer.name?.takeIf { it.isNotBlank() } ?: "Unknown"
@@ -452,6 +447,7 @@ class Stash : MainAPI() {
                 ?.let { add("Piercings: $it") }
 
             performer.fake_tits?.let { add("Breast type: $it") }
+
             performer.scene_count?.let { add("Scenes: $it") }
             performer.image_count?.let { add("Images: $it") }
             performer.gallery_count?.let { add("Galleries: $it") }
@@ -465,9 +461,16 @@ class Stash : MainAPI() {
 
             performer.alias_list
                 ?.takeIf { it.isNotEmpty() }
-                ?.let { add("Aliases: ${it.joinToString(", ")}") }
+                ?.let {
+                    add("Aliases: ${it.joinToString(", ")}")
+                }
 
-        }.joinToString(separator = "\n")
+        }.joinToString("<br>") { line ->
+            Html.escapeHtml(line)
+                .replace("\r\n", "\n")
+                .replace("\r", "\n")
+                .replace("\n", "<br>")
+        }
 
 
         val firstScreenshot = scenes.firstNotNullOfOrNull {
@@ -668,7 +671,7 @@ class Stash : MainAPI() {
             .build()
 
         return okHttp.newCall(request).execute().use { response ->
-            val body = response.body?.string().orEmpty()
+            val body = response.body.string()
             if (!response.isSuccessful) {
                 throw IOException("Stash GraphQL request failed: HTTP ${response.code}: $body")
             }
