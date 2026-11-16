@@ -416,6 +416,7 @@ class Stash : MainAPI() {
                 addDate(scene.date)
                 runTime = bestFile?.duration
                     ?.takeIf { it.isFinite() && it > 0 }
+                    ?.div(60.0)
                     ?.roundToInt()
             }
         }
