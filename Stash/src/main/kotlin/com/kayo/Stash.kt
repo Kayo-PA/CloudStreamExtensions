@@ -562,7 +562,7 @@ class Stash : MainAPI() {
             }.getOrDefault(false)
 
             if (available) {
-                callback( 
+                callback(
                     newExtractorLink(
                         source = name,
                         name = stream.label ?: "Stash stream",
