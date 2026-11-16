@@ -75,12 +75,11 @@ class Perverzija : MainAPI() {
     }
 
     override suspend fun search(query: String, page: Int): SearchResponseList {
-        val document = if (page == 1){
-            app.get("${mainUrl}/?s=${query}").document
-        } else if (query == "latest"){
+        val document = if (query == "latest"){
             app.get("$mainUrl/page/$page/?orderby=date").document
-
-        }else {
+        }else if (page == 1){
+            app.get("${mainUrl}/?s=${query}").document
+        } else {
             app.get("${mainUrl}/page/$page/?s=${query}").document
         }
 
