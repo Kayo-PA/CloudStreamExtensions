@@ -1,10 +1,14 @@
 package com.kayo
 
+import com.lagradost.cloudstream3.Actor
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
+import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
+import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
+import com.lagradost.cloudstream3.Score
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SearchResponseList
 import com.lagradost.cloudstream3.SubtitleFile
@@ -17,6 +21,7 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newSearchResponseList
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
 class Perverzija : MainAPI() {
@@ -61,17 +66,6 @@ class Perverzija : MainAPI() {
         )
     }
 
-    private fun Element.toRecommendationResult(): SearchResponse? {
-        val posterUrl = fixUrlNull(this.select("dt a img").attr("src"))
-        val title = this.select("dd a").text()
-        val href = fixUrlNull(this.select("dt a").attr("href")) ?: return null
-
-        return newMovieSearchResponse(title, href, TvType.NSFW) {
-            this.posterUrl = posterUrl
-        }
-
-    }
-
     private fun Element.toMainPageResult(): SearchResponse? {
         val title     = this.selectFirst("img")?.attr("title") ?: return null
         val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
@@ -105,45 +99,54 @@ class Perverzija : MainAPI() {
     override suspend fun quickSearch(query: String): List<SearchResponse>? = search(query)
 
 
-    override suspend fun load(url: String): LoadResponse {
-        val document = app.get(url, headers = headers).document
+    override suspend fun load(url: String): LoadResponse? {
+        val document = app.get(url).document
 
-        val poster = document.select("div#featured-img-id img").attr("src")
-        val title = document.select("div.title-info h1.light-title.entry-title").text()
-        val pTags = document.select("div.item-content p")
-        val description = StringBuilder().apply {
-            pTags.forEach {
-                append(it.text())
-            }
-        }.toString()
-
-        val tags = document.select("div.item-tax-list div a").map { it.text() }
-
-        val recommendations =
-            document.select("div.related-gallery dl.gallery-item").mapNotNull {
-                it.toRecommendationResult()
-            }
+        val title           = document.selectFirst("h1")?.text()?.trim() ?: return null
+        val poster          = fixUrlNull(document.selectFirst("meta[property=og:image]")?.attr("content"))
+        val description     = document.selectFirst("meta[property=og:description]")?.attr("content")?.trim()
+        val year            = document.selectFirst("div.extra span.C a")?.text()?.trim()?.toIntOrNull()
+        val tags            = document.select("div.item-tax-list div:has(strong:contains(tags)) a").map { it.text() }
+        val score          = document.selectFirst("span.dt_rating_vgs")?.text()?.trim()
+        val duration        = document.selectFirst("span.runtime")?.text()?.split(" ")?.first()?.trim()?.toIntOrNull()
+        val recommendations = document.select("div.srelacionados article").mapNotNull { it.toRecommendationResult() }
+        val actors          = document.select("div.item-tax-list div:has(strong:contains(stars)) a").map {
+            Actor(it.text())
+        }
+        val trailer         = Regex("""embed/(.*)\?rel""").find(document.html())?.groupValues?.get(1)?.let { "https://www.youtube.com/embed/$it" }
 
         return newMovieLoadResponse(title, url, TvType.NSFW, url) {
-            this.posterUrl = poster
-            this.plot = description
-            this.tags = tags
+            this.posterUrl       = poster
+            this.plot            = description
+            this.year            = year
+            this.tags            = tags
+            this.score           = Score.from10(score)
+            this.duration        = duration
             this.recommendations = recommendations
+            addActors(actors)
+            addTrailer(trailer)
         }
     }
 
-    override suspend fun loadLinks(
-        data: String,
-        isCasting: Boolean,
-        subtitleCallback: (SubtitleFile) -> Unit,
-        callback: (ExtractorLink) -> Unit
-    ): Boolean {
-        val response = app.get(data, headers = headers)
-        val document = response.document
 
-        val iframeUrl = document.select("div#player-embed iframe").attr("src")
+    private fun Element.toRecommendationResult(): SearchResponse? {
+        val title     = this.selectFirst("a img")?.attr("alt") ?: return null
+        val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
+        val posterUrl = fixUrlNull(this.selectFirst("a img")?.attr("data-src"))
 
-        Xtremestream().getUrl(iframeUrl, data, subtitleCallback, callback)
+        return newMovieSearchResponse(title, href, TvType.NSFW) { this.posterUrl = posterUrl }
+    }
+
+    override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
+        val document = app.get(data).document
+
+        val iframe = document.selectFirst("iframe")?.attr("src").toString()
+
+        if (iframe.contains("xtremestream") && iframe.contains("index.php")) {
+            Xtremestream().getUrl(iframe, "${mainUrl}/", subtitleCallback, callback)
+        } else {
+            loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
+        }
 
         return true
     }
