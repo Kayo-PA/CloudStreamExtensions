@@ -51,6 +51,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
+import java.util.Locale
+import kotlin.math.roundToInt
 
 class Stash : MainAPI() {
 
@@ -393,7 +395,8 @@ class Stash : MainAPI() {
                     bestFile?.video_codec?.let { add("Video: $it") }
                     bestFile?.audio_codec?.let { add("Audio: $it") }
                     bestFile?.size?.let { size ->
-                        add("File size: ${size / (1024.0 * 1024.0 * 1024.0)} GB")
+                        val sizeGb = size / (1024.0 * 1024.0 * 1024.0)
+                        add("File size: ${"%.2f".format(Locale.US, sizeGb)} GB")
                     }
                 }
                 if (videoInfo.isNotEmpty()) add(videoInfo.joinToString(" • "))
@@ -411,7 +414,9 @@ class Stash : MainAPI() {
                 posterUrl = addApiKey(scene.paths?.screenshot)
                 description = episodeDescription.takeIf { it.isNotBlank() }
                 addDate(scene.date)
-                runTime = bestFile?.duration?.toInt()
+                runTime = bestFile?.duration
+                    ?.takeIf { it.isFinite() && it > 0 }
+                    ?.roundToInt()
             }
         }
 
