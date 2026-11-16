@@ -422,10 +422,12 @@ class Stash : MainAPI() {
 
         val performerPoster = addApiKey(performer.image_path)
 
+
         val profileDescription = buildList {
+
             performer.details
                 ?.takeIf { it.isNotBlank() }
-                ?.let(::add)
+                ?.let { add(it) }
 
             performer.gender?.let { add("Gender: $it") }
             performer.birthdate?.let { add("Birthdate: $it") }
@@ -436,11 +438,19 @@ class Stash : MainAPI() {
             performer.eye_color?.let { add("Eye color: $it") }
             performer.hair_color?.let { add("Hair color: $it") }
             performer.weight?.let { add("Weight: $it") }
+
             performer.career_start?.let { add("Career start: $it") }
             performer.career_end?.let { add("Career end: $it") }
             performer.death_date?.let { add("Death date: $it") }
-            performer.tattoos?.takeIf { it.isNotBlank() }?.let { add("Tattoos: $it") }
-            performer.piercings?.takeIf { it.isNotBlank() }?.let { add("Piercings: $it") }
+
+            performer.tattoos
+                ?.takeIf { it.isNotBlank() }
+                ?.let { add("Tattoos: $it") }
+
+            performer.piercings
+                ?.takeIf { it.isNotBlank() }
+                ?.let { add("Piercings: $it") }
+
             performer.fake_tits?.let { add("Breast type: $it") }
             performer.scene_count?.let { add("Scenes: $it") }
             performer.image_count?.let { add("Images: $it") }
@@ -448,16 +458,17 @@ class Stash : MainAPI() {
             performer.group_count?.let { add("Groups: $it") }
             performer.performer_count?.let { add("Associated performers: $it") }
             performer.rating100?.let { add("Rating: $it/100") }
-            if (performer.favorite == true) add("Favourite: Yes")
+
+            performer.favorite?.let {
+                add("Favourite: ${if (it) "Yes" else "No"}")
+            }
 
             performer.alias_list
                 ?.takeIf { it.isNotEmpty() }
                 ?.let { add("Aliases: ${it.joinToString(", ")}") }
 
-            performer.urls
-                ?.takeIf { it.isNotEmpty() }
-                ?.let { add("External profiles:\n${it.joinToString("\n")}") }
-        }.joinToString("\n")
+        }.joinToString(separator = "\n")
+
 
         val firstScreenshot = scenes.firstNotNullOfOrNull {
             addApiKey(it.paths?.screenshot)
