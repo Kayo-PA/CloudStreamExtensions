@@ -231,8 +231,8 @@ class Stash : MainAPI() {
 
             return newSearchResponseList(result.items, result.hasNext)
         }
-
-        val response = stashGraphQL(getAllScenes(page, query))
+        val newQuery = if(query=="latest"){""}else(query)
+        val response = stashGraphQL(getAllScenes(page, newQuery))
         val result = gson.fromJson(response, FindScenesResponse::class.java)
             ?.data
             ?.findScenes
