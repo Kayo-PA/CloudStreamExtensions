@@ -24,13 +24,12 @@ class Perverzija : MainAPI() {
     override var mainUrl = "https://tube.perverzija.com"
     override val supportedTypes = setOf(TvType.NSFW)
 
+
     override val hasDownloadSupport = true
     override val hasMainPage = true
     private  val headers = mapOf(
         "User-Agent" to "Mozilla/5.0 (Android 13; Mobile; rv:139.0) Gecko/139.0 Firefox/139.0"
     )
-
-//    private val cfInterceptor = CloudflareKiller()
 
     override val mainPage = mainPageOf(
         "$mainUrl/page/%d/" to "Home",
@@ -73,31 +72,37 @@ class Perverzija : MainAPI() {
 
     }
 
-    private fun Element.toSearchResult(): SearchResponse? {
-        val posterUrl = fixUrlNull(this.select("div.item-thumbnail img").attr("src"))
-        val title = this.select("div.item-head a").text()
-        val href = fixUrlNull(this.select("div.item-head a").attr("href")) ?: return null
+    private fun Element.toMainPageResult(): SearchResponse? {
+        val title     = this.selectFirst("img")?.attr("title") ?: return null
+        val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
+        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
 
-        return newMovieSearchResponse(title, href, TvType.NSFW) {
-            this.posterUrl = posterUrl
-        }
-
+        return newMovieSearchResponse(title, href, TvType.NSFW) { this.posterUrl = posterUrl }
     }
 
     override suspend fun search(query: String, page: Int): SearchResponseList {
-        val url = when {
-            "p=" in query -> "$mainUrl/stars/${query.replace(" ","-").replace("p=","")}/page/$page/"
-            query.contains(" ") -> "$mainUrl/page/$page/?s=${query.replace(" ", "+")}&orderby=date"
-            query == "latest" -> "$mainUrl/page/$page/?orderby=date"
-            else -> "$mainUrl/tag/$query/page/$page/"
+        val document = if (page == 1){
+            app.get("${mainUrl}/?s=${query}").document
+        } else if (query == "latest"){
+            app.get("$mainUrl/page/$page/?orderby=date").document
+
+        }else {
+            app.get("${mainUrl}/page/$page/?s=${query}").document
         }
-        val doc = app.get(url, headers = headers).document
-        val results = doc.select("div.row div div.post").mapNotNull { it.toSearchResult() }
 
-        val hasNextPage = doc.select("div.wp-pagenavi a.nextpostslink").isNotEmpty()
-
-        return newSearchResponseList(results, hasNextPage)
+        val aramaCevap = document.select("div.col-md-3").mapNotNull { it.toMainPageResult() }
+        return newSearchResponseList(aramaCevap, hasNext = true)
     }
+
+    private fun Element.toSearchResult(): SearchResponse? {
+        val title     = this.selectFirst("div.title a")?.text() ?: return null
+        val href      = fixUrlNull(this.selectFirst("div.title a")?.attr("href")) ?: return null
+        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
+
+        return newMovieSearchResponse(title, href, TvType.NSFW) { this.posterUrl = posterUrl }
+    }
+
+    override suspend fun quickSearch(query: String): List<SearchResponse>? = search(query)
 
 
     override suspend fun load(url: String): LoadResponse {
