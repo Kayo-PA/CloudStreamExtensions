@@ -153,3 +153,21 @@ fun updateViewCount(id: Int): String {
         "query":"mutation SceneAddPlay($id: ID!, $times: [Timestamp!]) {\n  sceneAddPlay(id: $id, times: $times) {\n    count\n    history\n    __typename\n  }\n}" 
     }"""
 }
+
+
+fun findPerformer(page: Int, query: String = ""): String {
+    return $$"""{
+      "operationName": "FindPerformers",
+      "variables": {
+        "filter": {
+          "q": "$$query",
+          "page": $$page,
+          "per_page": 40,
+          "sort": "name",
+          "direction": "ASC"
+        },
+        "performer_filter": {}
+      },
+      "query": "query FindPerformers($filter: FindFilterType, $performer_filter: PerformerFilterType, $performer_ids: [Int!]) {\n  findPerformers(\n    filter: $filter\n    performer_filter: $performer_filter\n    performer_ids: $performer_ids\n  ) {\n    count\n    performers {\n      ...PerformerData\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment PerformerData on Performer {\n  id\n  name\n  disambiguation\n  urls\n  gender\n  birthdate\n  ethnicity\n  country\n  eye_color\n  height_cm\n  measurements\n  fake_tits\n  penis_length\n  circumcised\n  career_start\n  career_end\n  tattoos\n  piercings\n  alias_list\n  favorite\n  ignore_auto_tag\n  image_path\n  scene_count\n  image_count\n  gallery_count\n  group_count\n  performer_count\n  o_counter\n  tags {\n    ...SlimTagData\n    __typename\n  }\n  stash_ids {\n    stash_id\n    endpoint\n    updated_at\n    __typename\n  }\n  rating100\n  details\n  death_date\n  hair_color\n  weight\n  custom_fields\n  __typename\n}\n\nfragment SlimTagData on Tag {\n  id\n  name\n  sort_name\n  aliases\n  image_path\n  parent_count\n  child_count\n  stash_ids {\n    endpoint\n    stash_id\n    updated_at\n    __typename\n  }\n  __typename\n}"
+    }""".trimIndent()
+}

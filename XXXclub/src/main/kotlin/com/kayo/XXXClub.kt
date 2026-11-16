@@ -124,8 +124,7 @@ class XXXClub : MainAPI() {
 
                 title = link?.text().orEmpty()
                 url = link?.attr("href").orEmpty()
-                image = selectFirst("img.floaterimg")?.attr("src")?.replace(Regex("""(\d+)s/""")) { "${it.groupValues[1]}/" }
-                    ?.replace(Regex("""(\d+)\.th""")) { it.groupValues[1] }
+                image = selectFirst("img.floaterimg")?.attr("src")?.replace("/ps/","/p/")
             }
         }
 
@@ -195,6 +194,7 @@ class XXXClub : MainAPI() {
     override suspend fun quickSearch(query: String): List<SearchResponse>? = search(query)
 
     override suspend fun load(url: String): LoadResponse? {
+
         val document = app.get(url).document
 
         val title = document.selectFirst(".detailsdiv h1")

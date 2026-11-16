@@ -239,3 +239,60 @@ data class SceneStream(
     val mime_type: String?,
     val label: String?
 )
+
+
+// =====================
+// FIND PERFORMERS
+// =====================
+
+data class FindPerformersResponse(
+    val data: FindPerformersData?
+)
+
+data class FindPerformersData(
+    val findPerformers: FindPerformersResult?
+)
+
+data class FindPerformersResult(
+    val count: Int?,
+    val performers: List<PerformerDetails>?
+)
+
+data class PerformerDetails(
+    val id: String?,
+    val name: String?,
+    val disambiguation: String?,
+    val urls: List<String>?,
+    val gender: String?,
+    val birthdate: String?,
+    val ethnicity: String?,
+    val country: String?,
+    val eye_color: String?,
+    val height_cm: Int?,
+    val measurements: String?,
+    val fake_tits: String?,
+    val penis_length: String?,
+    val circumcised: Boolean?,
+    val career_start: String?,
+    val career_end: String?,
+    val tattoos: String?,
+    val piercings: String?,
+    val alias_list: List<String>?,
+    val favorite: Boolean?,
+    val ignore_auto_tag: Boolean?,
+    val image_path: String?,
+    val scene_count: Int?,
+    val image_count: Int?,
+    val gallery_count: Int?,
+    val group_count: Int?,
+    val performer_count: Int?,
+    val o_counter: Int?,
+    val tags: List<Tag>?,
+    val stash_ids: List<StashID>?,
+    val rating100: Int?,
+    val details: String?,
+    val death_date: String?,
+    val hair_color: String?,
+    val weight: Int?,
+    val custom_fields: Map<String, Any?>?
+)

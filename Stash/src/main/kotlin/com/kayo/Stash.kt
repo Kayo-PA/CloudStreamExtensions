@@ -20,8 +20,10 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newSearchResponseList
 import com.google.gson.Gson
+import com.kayo.helper.FindPerformersResponse
 import com.kayo.helper.FindSceneResponse
 import com.kayo.helper.FindScenesResponse
+import com.kayo.helper.findPerformer
 import com.kayo.helper.findSceneById
 import com.kayo.helper.getAllScenes
 import com.kayo.helper.getFavAtScenes
@@ -120,21 +122,70 @@ class Stash : MainAPI() {
         )
     }
 
+
     override suspend fun search(query: String, page: Int): SearchResponseList? {
+
+        // =====================
+        // PERFORMER SEARCH
+        // =====================
+
+        if (query.startsWith("p=", ignoreCase = true)) {
+
+            val performerQuery = query.substringAfter("=").trim()
+            if (performerQuery.isBlank()) return null
+
+            val bodyJson = findPerformer(page, performerQuery)
+            val initResponse = stashGraphQL(bodyJson)
+
+            val parsed = gson.fromJson(
+                initResponse,
+                FindPerformersResponse::class.java
+            )
+
+            val result = parsed.data?.findPerformers ?: return null
+
+            val performers = result.performers ?: emptyList()
+            val totalCount = result.count ?: 0
+
+            val items = performers.map { performer ->
+
+                newMovieSearchResponse(
+                    performer.name ?: "Unknown",
+                    performer.id ?: "",
+                    TvType.NSFW
+                ) {
+                    this.posterUrl = performer.image_path?.let {
+                        "$it&apikey=$apiKey"
+                    }
+                }
+            }
+
+            val hasNext = (page * 40) < totalCount
+
+            return newSearchResponseList(items, hasNext)
+        }
+
+        // =====================
+        // NORMAL SCENE SEARCH
+        // =====================
 
         val bodyJson = getAllScenes(page, query)
         val initResponse = stashGraphQL(bodyJson)
-        val parsed = gson.fromJson(initResponse, FindScenesResponse::class.java)
+
+        val parsed = gson.fromJson(
+            initResponse,
+            FindScenesResponse::class.java
+        )
 
         val result = parsed.data?.findScenes ?: return null
 
         val scenes = result.scenes ?: emptyList()
         val totalCount = result.count ?: 0
 
-
-        // Convert scenes → CloudStream SearchResponse
         val items = scenes.map { scene ->
+
             val file = scene.files?.maxByOrNull { it.height ?: 0 }
+
             val quality1 = when (file?.height ?: 0) {
                 in 2160..5000 -> SearchQuality.FourK
                 in 1440..2159 -> SearchQuality.HQ
@@ -144,11 +195,14 @@ class Stash : MainAPI() {
                 in 360..479 -> SearchQuality.SD
                 else -> SearchQuality.SD
             }
+
             val studio = scene.studio?.name
+
             val actors = scene.performers
                 ?.joinToString(", ") { performer ->
                     performer.name ?: "Unknown"
                 } ?: ""
+
             val title =
                 "${if (studio != null) "[$studio] - " else ""}$actors - ${scene.title ?: "Untitled"}"
 
@@ -157,7 +211,9 @@ class Stash : MainAPI() {
                 scene.id ?: "",
                 TvType.NSFW
             ) {
-                this.posterUrl = scene.paths?.screenshot + "&apikey=" + apiKey
+                this.posterUrl = scene.paths?.screenshot?.let {
+                    "$it&apikey=$apiKey"
+                }
                 this.quality = quality1
             }
         }
@@ -166,6 +222,7 @@ class Stash : MainAPI() {
 
         return newSearchResponseList(items, hasNext)
     }
+
 
 
     override suspend fun load(url: String): LoadResponse {
