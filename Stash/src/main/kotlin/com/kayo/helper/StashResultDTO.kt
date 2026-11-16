@@ -4,22 +4,10 @@ package com.kayo.helper
 // ROOT RESPONSES
 // =====================
 
-data class FindScenesResponse(
-    val data: FindScenesData?
-)
-
-data class FindScenesData(
-    val findScenes: FindScenesResult?
-)
-
-data class FindSceneResponse(
-    val data: FindSceneData?
-)
-
-data class FindSceneData(
-    val findScene: SceneFull?
-)
-
+data class FindScenesResponse(val data: FindScenesData?)
+data class FindScenesData(val findScenes: FindScenesResult?)
+data class FindSceneResponse(val data: FindSceneData?)
+data class FindSceneData(val findScene: SceneFull?)
 
 // =====================
 // FIND SCENES (LIST)
@@ -35,9 +23,16 @@ data class FindScenesResult(
 data class SceneItem(
     val id: String?,
     val title: String?,
+    val code: String? = null,
+    val details: String? = null,
+    val director: String? = null,
+    val urls: List<String>? = null,
     val date: String?,
     val o_counter: Int?,
     val rating100: Int?,
+    val resume_time: Double? = null,
+    val play_duration: Double? = null,
+    val play_count: Int? = null,
     val files: List<VideoFileFull>?,
     val paths: ScenePaths?,
     val tags: List<Tag>?,
@@ -52,7 +47,6 @@ data class ScenePaths(
     val webp: String?,
     val sprite: String?
 )
-
 
 // =====================
 // FIND SCENE (FULL DETAILS)
@@ -90,9 +84,8 @@ data class SceneFull(
     val sceneStreams: List<SceneStream>?
 )
 
-
 // =====================
-// FULL FILE INFO
+// FILE INFO
 // =====================
 
 data class VideoFileFull(
@@ -110,11 +103,7 @@ data class VideoFileFull(
     val fingerprints: List<Fingerprint>?
 )
 
-data class Fingerprint(
-    val type: String?,
-    val value: String?
-)
-
+data class Fingerprint(val type: String?, val value: String?)
 
 // =====================
 // FULL PATHS INFO
@@ -132,20 +121,11 @@ data class ScenePathsFull(
     val caption: String?
 )
 
-
 // =====================
-// CAPTIONS
+// CAPTIONS / MARKERS / GALLERIES
 // =====================
 
-data class Caption(
-    val language_code: String,
-    val caption_type: String
-)
-
-
-// =====================
-// SCENE MARKERS
-// =====================
+data class Caption(val language_code: String, val caption_type: String)
 
 data class SceneMarker(
     val id: String?,
@@ -159,11 +139,6 @@ data class SceneMarker(
     val tags: List<Tag>?
 )
 
-
-// =====================
-// GALLERIES
-// =====================
-
 data class GallerySlim(
     val id: String?,
     val title: String?,
@@ -171,11 +146,7 @@ data class GallerySlim(
     val paths: GalleryPaths?
 )
 
-data class GalleryPaths(
-    val cover: String?,
-    val preview: String?
-)
-
+data class GalleryPaths(val cover: String?, val preview: String?)
 
 // =====================
 // PERFORMERS
@@ -197,66 +168,16 @@ data class PerformerFull(
     val rating100: Int?
 )
 
-
-// =====================
-// STUDIO
-// =====================
-
-data class Studio(
-    val id: String?,
-    val name: String?,
-    val image_path: String?
-)
-
-
-// =====================
-// TAG
-// =====================
-
-data class Tag(
-    val id: String?,
-    val name: String?
-)
-
-
-// =====================
-// STASH ID
-// =====================
-
-data class StashID(
-    val endpoint: String?,
-    val stash_id: String?,
-    val updated_at: String?
-)
-
-
-// =====================
-// SCENE STREAMS
-// =====================
-
-data class SceneStream(
-    val url: String?,
-    val mime_type: String?,
-    val label: String?
-)
-
-
-// =====================
-// FIND PERFORMERS
-// =====================
-
-data class FindPerformersResponse(
-    val data: FindPerformersData?
-)
-
-data class FindPerformersData(
-    val findPerformers: FindPerformersResult?
-)
-
+// Search result for FindPerformers and profile object for FindPerformer.
+data class FindPerformersResponse(val data: FindPerformersData?)
+data class FindPerformersData(val findPerformers: FindPerformersResult?)
 data class FindPerformersResult(
     val count: Int?,
     val performers: List<PerformerDetails>?
 )
+
+data class FindPerformerResponse(val data: FindPerformerData?)
+data class FindPerformerData(val findPerformer: PerformerDetails?)
 
 data class PerformerDetails(
     val id: String?,
@@ -295,4 +216,31 @@ data class PerformerDetails(
     val hair_color: String?,
     val weight: Int?,
     val custom_fields: Map<String, Any?>?
+)
+
+// =====================
+// STUDIO / TAG / STASH ID / STREAMS
+// =====================
+
+data class Studio(
+    val id: String?,
+    val name: String?,
+    val image_path: String?
+)
+
+data class Tag(
+    val id: String?,
+    val name: String?
+)
+
+data class StashID(
+    val endpoint: String?,
+    val stash_id: String?,
+    val updated_at: String?
+)
+
+data class SceneStream(
+    val url: String?,
+    val mime_type: String?,
+    val label: String?
 )

@@ -155,7 +155,10 @@ fun updateViewCount(id: Int): String {
 }
 
 
-fun findPerformer(page: Int, query: String = ""): String {
+fun findPerformer(page: Int, query: String = "",sort : String = "name"): String {
+    val sort1 = if(sort == "random"){"random_$randomNumber"} else {
+        sort
+    }
     return $$"""{
       "operationName": "FindPerformers",
       "variables": {
@@ -163,11 +166,45 @@ fun findPerformer(page: Int, query: String = ""): String {
           "q": "$$query",
           "page": $$page,
           "per_page": 40,
-          "sort": "name",
+          "sort": "$$sort1",
           "direction": "ASC"
         },
         "performer_filter": {}
       },
       "query": "query FindPerformers($filter: FindFilterType, $performer_filter: PerformerFilterType, $performer_ids: [Int!]) {\n  findPerformers(\n    filter: $filter\n    performer_filter: $performer_filter\n    performer_ids: $performer_ids\n  ) {\n    count\n    performers {\n      ...PerformerData\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment PerformerData on Performer {\n  id\n  name\n  disambiguation\n  urls\n  gender\n  birthdate\n  ethnicity\n  country\n  eye_color\n  height_cm\n  measurements\n  fake_tits\n  penis_length\n  circumcised\n  career_start\n  career_end\n  tattoos\n  piercings\n  alias_list\n  favorite\n  ignore_auto_tag\n  image_path\n  scene_count\n  image_count\n  gallery_count\n  group_count\n  performer_count\n  o_counter\n  tags {\n    ...SlimTagData\n    __typename\n  }\n  stash_ids {\n    stash_id\n    endpoint\n    updated_at\n    __typename\n  }\n  rating100\n  details\n  death_date\n  hair_color\n  weight\n  custom_fields\n  __typename\n}\n\nfragment SlimTagData on Tag {\n  id\n  name\n  sort_name\n  aliases\n  image_path\n  parent_count\n  child_count\n  stash_ids {\n    endpoint\n    stash_id\n    updated_at\n    __typename\n  }\n  __typename\n}"
+    }""".trimIndent()
+}
+
+fun getPerformerById(id: String): String {
+    return $$"""{
+      "operationName": "FindPerformer",
+      "variables": {
+        "id": "$$id"
+      },
+      "query": "query FindPerformer($id: ID!) {\n  findPerformer(id: $id) {\n    ...PerformerData\n    __typename\n  }\n}\n\nfragment PerformerData on Performer {\n  id\n  name\n  disambiguation\n  urls\n  gender\n  birthdate\n  ethnicity\n  country\n  eye_color\n  height_cm\n  measurements\n  fake_tits\n  penis_length\n  circumcised\n  career_start\n  career_end\n  tattoos\n  piercings\n  alias_list\n  favorite\n  ignore_auto_tag\n  image_path\n  scene_count\n  image_count\n  gallery_count\n  group_count\n  performer_count\n  o_counter\n  tags {\n    id name\n    __typename\n  }\n  stash_ids {\n    stash_id endpoint updated_at\n    __typename\n  }\n  rating100\n  details\n  death_date\n  hair_color\n  weight\n  custom_fields\n  __typename\n}"
+    }""".trimIndent()
+}
+
+fun getPerformerScenes(page: Int, performerId: String): String {
+    return $$"""{
+      "operationName": "FindScenes",
+      "variables": {
+        "filter": {
+          "q": "",
+          "page": $$page,
+          "per_page": 40,
+          "sort": "date",
+          "direction": "DESC"
+        },
+        "scene_filter": {
+          "performers": {
+            "value": ["$$performerId"],
+            "excludes": [],
+            "modifier": "INCLUDES_ALL"
+          }
+        },
+        "scene_ids": null
+      },
+      "query": "query FindScenes($filter: FindFilterType, $scene_filter: SceneFilterType, $scene_ids: [Int!]) {\n  findScenes(filter: $filter, scene_filter: $scene_filter, scene_ids: $scene_ids) {\n    count\n    filesize\n    duration\n    scenes {\n      id\n      title\n      code\n      details\n      director\n      urls\n      date\n      rating100\n      o_counter\n      resume_time\n      play_duration\n      play_count\n      files {\n        id\n        path\n        size\n        mod_time\n        duration\n        video_codec\n        audio_codec\n        width\n        height\n        frame_rate\n        bit_rate\n      }\n      paths {\n        screenshot\n        preview\n        stream\n        webp\n        sprite\n      }\n      studio {\n        id name image_path\n      }\n      tags {\n        id name\n      }\n      performers {\n        id name image_path\n      }\n    }\n  }\n}"
     }""".trimIndent()
 }
