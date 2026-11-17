@@ -183,7 +183,13 @@ class Pornhd3x : MainAPI() {
             val regex = """(?<="file":")[^"]+""".toRegex()
             val matchResult = regex.find(responseData)
             val ur = matchResult?.value
-            return ur?.removePrefix("//")
+            return ur?.removePrefix("//")?.let { cleanUrl ->
+                if (cleanUrl.startsWith("https://", ignoreCase = true)) {
+                    cleanUrl
+                } else {
+                    "https://$cleanUrl"
+                }
+            }
         }
     }
 
